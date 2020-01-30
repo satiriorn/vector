@@ -9,7 +9,10 @@ template <typename T, typename A = std::allocator<T>>
 class vector
 {
 public: 
-	explicit vector(int s);//default
+	vector() :sz{0}, space{0}, elem{nullptr} {}
+
+	explicit vector(const int s) :sz{ s }, space{ s }, elem{ new T[s] } {for (int i = 0; i < s; ++i)elem[i] = 0;}
+
 	vector(std::initializer_list<T> lst);
 	
 	vector(vector&& arg);	//moving constructor
@@ -17,7 +20,9 @@ public:
 
 	~vector() { delete[] elem; }
 
-	T& operator[ ](int i) { return elem[i]; }
+	T& operator[](int i) { return elem[i]; }
+
+	vector& operator=(const vector& arg); //copy assignment
 
 	int capacity() const { return space; }
 	int size() const { return sz; }
@@ -26,26 +31,16 @@ public:
 	T* end(vector<T>& x);
 
 	void reserve(int newalloc); 
-	void resize(int newsize, const T& val = T())
-	{
-		reserve(newsize);
-
-		for (int i = sz; i < newsize; ++i)
-			alloc.construct(&elem[i], val);
-		for (int i = sz; i < newsize; ++i)
-			alloc.destroy(&elem[i]);
-		sz = newsize;
-	}
-
+	
 	void push_back(const T& x);	
 
 private:
 	vector(const vector& arg);//copy constructors
-	vector& operator=(const vector& arg);
+	void resize(int newsize, const T& val = T());
 
 	A alloc;
-	int sz;	
 	T* elem;	//pointer on elements
+	int sz;	
 	int space;  //amount of elements + amount of "free memory"
 	
 };
