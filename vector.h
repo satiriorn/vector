@@ -92,3 +92,26 @@ vector<T, A> vector<T, A>::operator=(vector&& arg){
 	arg.sz = 0;
 	return *this;
 }
+
+template <typename T, typename A>
+void vector<T, A>::reserve(int newalloc){
+	if (newalloc <= space) return;
+	T* p = alloc.allocate(newalloc);
+	for (int i = 0; i < sz; ++i)
+		alloc.construct(&p[i], elem[i]);
+	for (int i = 0; i < sz; ++i)
+		alloc.detroy(&elem[i]);
+	alloc.deallocate(elem, space);
+	elem = p;
+	space = newalloc;
+}
+
+template <typename T, typename A>
+void vector<T, A>::resize(int newsize, const T& val){
+	reserve(newsize);
+	for (int i = sz; i < newsize; ++i)
+		alloc.construct(&elem[i], val);
+	for (int i = sz; i < newsize; ++i)
+		alloc.destroy(&elem[i]);
+	sz = newsize;
+}
