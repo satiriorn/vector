@@ -44,3 +44,51 @@ private:
 	int space;  //amount of elements + amount of "free memory"
 	
 };
+
+template <typename T, typename A>
+vector<T, A>::vector(std::initializer_list<T> lst):sz{ static_cast<int>(lst.size()) }, elem{ new T[lst.size()] }, space{ sz }
+{
+	std::copy(lst.begin(), lst.end(), elem);
+}
+template <typename T, typename A>
+vector<T, A>::vector(const vector& arg) : sz{ arg.sz }, elem{ new T[arg.sz] }, space{ sz }
+{
+	std::copy(arg.elem, arg.elem + arg.sz, elem);
+}
+
+template <typename T, typename A>
+vector<T, A>::vector(vector&& arg) :
+	sz{ arg.sz }, elem{ arg.elem }, space{ sz }
+{
+	arg.sz = 0;
+	arg.elem = nullptr;
+}
+
+template <typename T, typename A>
+vector<T, A>& vector<T, A>::operator=(const vector& arg){
+	if (this == &arg)
+		return *this;
+	if (arg.sz <= space)
+	{
+		std::copy(arg.elem, arg.elem + arg.sz, elem);
+		sz = arg.sz;
+		return *this;
+	}
+
+	T* p = new T[arg.size()];
+	std::copy(arg.elem, arg.elem + arg.sz, p);
+	delete[] elem;
+	elem = p;
+	space = sz = arg.sz;
+	return *this;
+}
+
+template <typename T, typename A>
+vector<T, A> vector<T, A>::operator=(vector&& arg){
+	delete[] elem;
+	elem = arg.elem;
+	arg.elem = nullptr;
+	sz = arg.sz;
+	arg.sz = 0;
+	return *this;
+}
