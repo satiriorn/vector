@@ -1,117 +1,205 @@
 #pragma once
 #ifndef VECTOR_H
 #define VECTOR_H
+#include <iostream>
+#include<algorithm>
+#include <memory>
 #include <initializer_list>
 #include <iterator>
-#include <memory>
+using namespace std;
 
-template <typename T, typename A = std::allocator<T>>
-class vector
+template <typename T, typename A>
+struct Foundation
 {
-public: 
-	vector() :sz{0}, space{0}, elem{nullptr} {}
+	using size_type = size_t;
+	A a;
+	T* elem;
+	size_type sz;
+	size_type space;
 
-	explicit vector(const int s) :sz{ s }, space{ s }, elem{ new T[s] } {for (int i = 0; i < s; ++i)elem[i] = 0;}
+	Foundation(A a, size_type n): a{ a }, elem{ a.allocate(n) }, sz{ n }, space{ n }{}
 
-	vector(std::initializer_list<T> lst);
-	
-	vector(vector&& arg);	//moving constructor
-	vector operator=(vector&& arg);
+	~Foundation() {a.deallocate(elem, space);}
+};
 
-	~vector() { delete[] elem; }
+template<typename T, typename A = allocator<T>>
+class vector : private Foundation<T, A>
+{
+public:
+	~vector();
 
-	T& operator[](int i) { return elem[i]; }
+	using size_type = typename Foundation<T, A>::size_type;
 
-	vector& operator=(const vector& arg); //copy assignment
+	explicit vector(size_type n, T d = T(), A a = A());
 
-	int capacity() const { return space; }
-	int size() const { return sz; }
+	vector(initializer_list<T> lst, const A& a = A());
 
-	T* begin(vector<T> &x);
-	T* end(vector<T>& x);
+	vector(const A& a = A()) : Foundation<T, A>(a, 0) {}
 
-	void reserve(int newalloc); 
-	
-	void push_back(const T& x);	
+	vector(const vector& arg);
+	vector& operator= (const vector& v);
 
-private:
-	vector(const vector& arg);//copy constructors
-	void resize(int newsize, const T& val = T());
+	vector(vector&& a);
+	vector& operator= (vector&& a);
 
-	A alloc;
-	T* elem;	//pointer on elements
-	int sz;	
-	int space;  //amount of elements + amount of "free memory"
-	
+	T& at(size_type n);
+	const T& at(size_type n) const;
+
+	T& operator[] (size_type n);
+	const T& operator[] (size_type n) const;
+
+	size_type size() const { return this->sz; }
+
+	size_type capacity() const { return this->space; }
+
+	T& begin();
+
+	int end();
+
+	void reserve(size_type newalloc);
+
+	void resize(size_type& newsize, T val = T());
+
+	void push_back(const T& d);
 };
 
 template <typename T, typename A>
-vector<T, A>::vector(std::initializer_list<T> lst):sz{ static_cast<int>(lst.size()) }, elem{ new T[lst.size()] }, space{ sz }
+vector<T, A>::~vector()
 {
-	std::copy(lst.begin(), lst.end(), elem);
-}
-template <typename T, typename A>
-vector<T, A>::vector(const vector& arg) : sz{ arg.sz }, elem{ new T[arg.sz] }, space{ sz }
-{
-	std::copy(arg.elem, arg.elem + arg.sz, elem);
+	for (size_type i = 0; i < this->sz; ++i)
+		this->a.destroy(this->elem + i);
 }
 
 template <typename T, typename A>
-vector<T, A>::vector(vector&& arg) :
-	sz{ arg.sz }, elem{ arg.elem }, space{ sz }
+vector<T, A>::vector(size_type n, T d, A a)
+	:Foundation<T, A>(a, n)
 {
-	arg.sz = 0;
-	arg.elem = nullptr;
+	for (size_type i = 0; i < n; ++i)
+		this->a.construct(&this->elem[i], d);
 }
 
 template <typename T, typename A>
-vector<T, A>& vector<T, A>::operator=(const vector& arg){
+vector<T, A>::vector(initializer_list<T> lst, const A& a)
+	:Foundation<T, A>(a, lst.size())
+{
+	for (size_type i = 0; i < lst.size(); ++i)
+		this->a.construct(&this->elem[i], *(lst.begin() + i));
+}
+
+template <typename T, typename A>
+vector<T, A>::vector(const vector& arg)
+	:Foundation<T, A>(arg.a, arg.sz)
+{
+	for (size_type i = 0; i < arg.sz; ++i)
+		this->a.construct(&this->elem[i], arg[i]);
+}
+
+template <typename T, typename A>
+vector<T, A>& vector<T, A>::operator=(const vector<T, A>& arg)
+{
 	if (this == &arg)
 		return *this;
-	if (arg.sz <= space)
-	{
-		std::copy(arg.elem, arg.elem + arg.sz, elem);
-		sz = arg.sz;
-		return *this;
-	}
-
-	T* p = new T[arg.size()];
-	std::copy(arg.elem, arg.elem + arg.sz, p);
-	delete[] elem;
-	elem = p;
-	space = sz = arg.sz;
+	Foundation<T, A> b(this->a, arg.sz);
+	uninitialized_copy(&arg[0], &arg[arg.size()], b.elem);
+	swap(this->elem, b.elem);
+	swap(this->sz, b.sz);
+	swap(this->space, b.space);
+	for (size_type i = 0; i < b.sz; ++i)
+		b.a.destroy(b.elem + i);//free memory used for vector before
 	return *this;
 }
 
 template <typename T, typename A>
-vector<T, A> vector<T, A>::operator=(vector&& arg){
-	delete[] elem;
-	elem = arg.elem;
-	arg.elem = nullptr;
-	sz = arg.sz;
+vector<T, A>::vector(vector&& arg):Foundation<T, A>(arg.a, arg.sz)
+{
 	arg.sz = 0;
+	arg.elem = nullptr;
+	arg.space = 0;
+	std::cout << endl << "yes" << endl << endl;
+}
+
+template <typename T, typename A>
+vector<T, A>& vector<T, A>::operator=(vector<T, A>&& arg)
+{
+	swap(this->elem, arg.elem);
+	swap(this->sz, arg.sz);
+	swap(this->space, arg.space);
+	delete[] arg.elem;
+	std::cout << endl << "yes" << endl << endl;
 	return *this;
 }
 
 template <typename T, typename A>
-void vector<T, A>::reserve(int newalloc){
-	if (newalloc <= space) return;
-	T* p = alloc.allocate(newalloc);
-	for (int i = 0; i < sz; ++i)
-		alloc.construct(&p[i], elem[i]);
-	for (int i = 0; i < sz; ++i)
-		alloc.detroy(&elem[i]);
-	alloc.deallocate(elem, space);
-	elem = p;
-	space = newalloc;
+void vector<T, A>::reserve(size_type newalloc)
+{
+	if (newalloc <= this->space) return;
+	Foundation<T, A> b(this->a, newalloc);
+	uninitialized_copy(&this->elem[0], &this->elem[this->sz], b.elem);
+	for (size_type i = 0; i < this->sz; ++i)
+	{
+		this->a.destroy(&this->elem[i]);
+	}
+	b.sz = this->sz;
+	swap(this->elem, b.elem);
+	swap(this->sz, b.sz);
+	swap(this->space, b.space);
 }
 
 template <typename T, typename A>
-void vector<T, A>::resize(int newsize, const T& val){
-	reserve(newsize);
-	for (int i = sz; i < newsize; ++i)
-		alloc.construct(&elem[i], val);
-	for (int i = sz; i < newsize; ++i)
-		alloc.destroy(&elem[i]);
-	sz = newsize;
+void vector<T, A>::push_back(const T& val)
+{
+	if (!(this->space))
+		reserve(8);
+	else if (this->sz == this->space)
+		reserve(2 * this->space);
+	this->a.construct(&this->elem[this->sz], val);
+	++this->sz;
 }
+
+template <typename T, typename A>
+void vector<T, A>::resize(size_type& newsize, T val)
+{
+	reserve(newsize);
+	for (size_type i = this->sz; i < newsize; ++i) this->a.construct(&this->elem[i], val);
+	for (size_type i = newsize; i < this->sz; ++i) this->a.destroy(&this->elem[i]);
+	this->sz = newsize;
+}
+
+template <typename T, typename A>
+T& vector<T, A>::at(size_type n)
+{
+	if (n < 0 || this->sz <= n) throw out_of_range("Out of range");
+	return this->elem[n];
+}
+
+template <typename T, typename A>
+const T& vector<T, A>::at(size_type n) const
+{
+	if (n < 0 || this->sz <= n) throw out_of_range("Out of range");
+	return this->elem[n];
+}
+
+template <typename T, typename A>
+T& vector<T, A>::operator[] (size_type n)
+{
+	return this->elem[n];
+}
+
+template <typename T, typename A>
+const T& vector<T, A>::operator[] (size_type n) const
+{
+	return this->elem[n];
+}
+
+template <typename T, typename A>
+T& vector<T, A>::begin()
+{
+	return this->elem[0];
+}
+
+template <typename T, typename A>
+int vector<T, A>::end()
+{
+	return sizeof(this->elem);
+}
+#endif
