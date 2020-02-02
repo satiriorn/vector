@@ -1,11 +1,7 @@
 #pragma once
 #ifndef VECTOR_H
 #define VECTOR_H
-#include <iostream>
-#include<algorithm>
-#include <memory>
-#include <initializer_list>
-#include <iterator>
+
 #include <Arduino.h>
 using namespace std;
 
