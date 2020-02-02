@@ -6,6 +6,7 @@
 #include <memory>
 #include <initializer_list>
 #include <iterator>
+#include <Arduino.h>
 using namespace std;
 
 template <typename T, typename A>
