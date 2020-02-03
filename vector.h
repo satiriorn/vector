@@ -123,14 +123,14 @@ T& vector<T, A>::begin()
 template <typename T, typename A>
 int vector<T, A>::end()
 {
-	return sizeof(this->elem);
+	return sizeof(this->elem[sz]);
 }
 
 template <typename T, typename A>
 T& vector<T, A>::at(int n)
 {
 	if (n < 0 || this->sz <= n) throw ("Out of range");
-	return this->elem[n];
+	return this->elem[sz];
 }
 
 template <typename T, typename A>

@@ -10,12 +10,9 @@ void loop() {
   a.push_back(9);
   a.push_back(5);
   a.push_back(3);
-  for (auto i = 0; i < a.size(); ++i) {
-    Serial.print(a[i]);
-    delay(2000);
-  }
+
   Serial.print(a.begin());
   delay(2000);
-   Serial.print(a.end());
+   Serial.print(a.size());
   delay(2000);
 }
