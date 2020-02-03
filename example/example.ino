@@ -13,6 +13,6 @@ void loop() {
 
   Serial.print(a.begin());
   delay(2000);
-   Serial.print(a.size());
+   Serial.print(a.end());
   delay(2000);
 }

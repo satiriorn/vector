@@ -1,6 +1,6 @@
 #ifndef VECTOR_H
 #define VECTOR_H 
-#define ALLOCSIZE 100 //count buf
+#define ALLOCSIZE 100
 #include <Arduino.h>
 
 
@@ -66,7 +66,7 @@ public:
 	int capacity() const { return space; }
 	
 	T& begin();
-	int end();
+	T& end();
 
 	T& at(int n);
 	const T& at(int n) const;
@@ -115,22 +115,16 @@ void vector<T, A>::push_back(const T& val) {
 }
 
 template <typename T, typename A>
-T& vector<T, A>::begin()
-{
-	return this->elem[0];
-}
+T& vector<T, A>::begin(){return elem[0];}
 
 template <typename T, typename A>
-int vector<T, A>::end()
-{
-	return sizeof(this->elem[sz]);
-}
+T& vector<T, A>::end(){return elem[sz-1];}
 
 template <typename T, typename A>
 T& vector<T, A>::at(int n)
 {
 	if (n < 0 || this->sz <= n) throw ("Out of range");
-	return this->elem[sz];
+	return this->elem[n];
 }
 
 template <typename T, typename A>
