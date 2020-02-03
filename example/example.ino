@@ -1,7 +1,7 @@
 #include <vector.h>
 
 void setup() {
-  Serial.begin(5700);
+  Serial.begin(9800);
 }
 
 void loop() {
