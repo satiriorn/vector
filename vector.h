@@ -1,6 +1,6 @@
 #ifndef VECTOR_H
 #define VECTOR_H 
-#define ALLOCSIZE 100
+#define ALLOCSIZE 100 //count buf
 #include <Arduino.h>
 
 
